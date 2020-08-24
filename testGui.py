@@ -1,7 +1,11 @@
-print "hello world"
-
 import tkinter as tk
 window = tk.Tk()
-label = tk.Label(window, text = "hello world")
+frame = tk.Frame(window, relief = tk.RAISED, borderwidth=2)
+label = tk.Label(master = frame, text = "hello world")
+frame2 = tk.Frame(window, relief = tk.RAISED, borderwidth=2)
+label2 = tk.Label(master = frame2, text = "hello world")
+frame.pack()
+frame2.pack()
 label.pack()
+label2.pack()
 window.mainloop()
