@@ -1,6 +1,7 @@
 import tkinter as tk
 import time
 import threading
+import copy
 from queue import Queue
 
 #Defining some important variables
@@ -53,15 +54,17 @@ class GraphicsClass:
         self.x = 0
         self.y = -1
 
-    def paintBoard(self, board):
+    def paintBoard(self, animatedBoard):
         self.finishedMovement = False
         for col in range(0,4):
             for row in range(0,4):
-                if board[col][row] != None:
-                    if GraphicsClass.canvas.coords(board[col][row].rect) == [5 + col * blockWidth, 5 + row * blockWidth, 5 + (col + 1) * blockWidth, 5 + (row + 1) * blockWidth]:
+                if animatedBoard[col][row] != None:
+                    if GraphicsClass.canvas.coords(animatedBoard[col][row].rect) == [5 + col * blockWidth, 5 + row * blockWidth, 5 + (col + 1) * blockWidth, 5 + (row + 1) * blockWidth]:
                         self.finishedMovement = True
+                        if board[col][row] == None:
+                            GraphicsClass.canvas.delete(board[col][row].rect)
                     else:
-                        self.moveBlock(board[col][row])
+                        self.moveBlock(animatedBoard[col][row])
 
 animatedGrid = GraphicsClass(window)
 block = Block(0,0)
@@ -74,6 +77,7 @@ q = Queue(maxsize = 3)
 
 
 def rightMove(board):
+    deletedTiles = []
     for col in [2,1,2,0,1,2]:
         for row in range(0,4): #Order moves right most, then works its way left.
             if board[col][row] != None:
@@ -81,15 +85,25 @@ def rightMove(board):
                     board[col+1][row] = board[col][row]
                     board[col+1][row].col = board[col+1][row].col + 1
                     board[col][row] = None
-                if board[col+1][row] == board[col][row] and hasMerged[col+1][row] == 0:
-                    board[col+1][row].val = board[col][row] + 1
-                    board[col][row] = None
+                elif board[col+1][row] != None:
+                    if board[col+1][row].val == board[col][row].val and hasMerged[col+1][row] == 0:
+                        board[col+1][row].val = board[col][row].val + 1
+                        deletedTiles.append(board[col][row])
+                        board[col][row] = None
                 #nothing happens and blocks dont merge otherwise
+    newBoard = copy.deepcopy(board)
+    for tile in deletedTiles:
+        newBoard[tile.col][tile.row] = tile
+
     print(board)
+    print(newBoard)
     animatedGrid.moveBlockRight()
-    animatedGrid.paintBoard(board)
+    animatedGrid.paintBoard(newBoard)
+    return newBoard
 
 def downMove(board):
+    deletedTiles = []
+    animatedGrid.moveBlockDown()
     for col in range(0,4):
         for row in [2,1,2,0,1,2]:
             if board[col][row] != None:
@@ -97,15 +111,24 @@ def downMove(board):
                     board[col][row+1] = board[col][row]
                     board[col][row+1].row = board[col][row+1].row + 1
                     board[col][row] = None
-                if board[col][row+1] == board[col][row] and hasMerged[col][row+1] == 0:
-                    board[col][row+1].val = board[col][row] + 1
-                    board[col][row] = None
+                    animatedGrid.paintBoard(board)
+                elif board[col][row+1] != None:
+                    if board[col][row+1].val == board[col][row].val and hasMerged[col][row+1] == 0:
+                        board[col][row+1].val = board[col][row].val + 1
+                        deletedTiles.append(board[col][row])
+                        board[col][row] = None
                 #nothing happens and blocks dont merge otherwise
+    newBoard = copy.deepcopy(board)
+    for tile in deletedTiles:
+        newBoard[tile.col][tile.row] = tile
+
     print(board)
-    animatedGrid.moveBlockDown()
+    print(newBoard)
     animatedGrid.paintBoard(board)
+    return newBoard
 
 def leftMove(board):
+    deletedTiles = []
     for col in [1,2,1,3,2,1]:
         for row in range(0,4):
             if board[col][row] != None:
@@ -113,14 +136,21 @@ def leftMove(board):
                     board[col-1][row] = board[col][row]
                     board[col-1][row].col = board[col-1][row].col - 1
                     board[col][row] = None
-                if board[col-1][row] == board[col][row] and hasMerged[col+1][row] == 0:
-                    board[col-1][row].val = board[col][row] + 1
-                    board[col][row] = None
+                elif board[col-1][row] != None:
+                    if board[col-1][row].val == board[col][row].val and hasMerged[col+1][row] == 0:
+                        board[col-1][row].val = board[col][row].val + 1
+                        deletedTiles.append(board[col][row])
+                        board[col][row] = None
+    newBoard = copy.deepcopy(board)
+    for tile in deletedTiles:
+        newBoard[tile.col][tile.row] = tile
     print(board)
     animatedGrid.moveBlockLeft()
     animatedGrid.paintBoard(board)
+    return newBoard
 
 def upMove(board):
+    deletedTiles = []
     for row in [1,2,1,3,2,1]:
         for col in range(0,4):
             if board[col][row] != None:
@@ -128,13 +158,19 @@ def upMove(board):
                     board[col][row-1] = board[col][row]
                     board[col][row-1].row = board[col][row-1].row - 1
                     board[col][row] = None
-                if board[col][row-1] == board[col][row] and hasMerged[col][row-1] == 0:
-                    board[col][row-1].val = board[col][row] + 1
-                    board[col][row] = None
+                elif board[col][row-1] != None:
+                    if board[col][row-1].val == board[col][row].val and hasMerged[col][row-1] == 0:
+                        board[col][row-1].val = board[col][row].val + 1
+                        deletedTiles.append(board[col][row])
+                        board[col][row] = None
                 #nothing happens and blocks dont merge otherwise
+    newBoard = copy.deepcopy(board)
+    for tile in deletedTiles:
+        newBoard[tile.col][tile.row] = tile
     print(board)
     animatedGrid.moveBlockUp()
     animatedGrid.paintBoard(board)
+    return newBoard
 
 #Binds keys to actions. Queueing prevents animations from terminating previous animations while still running
 window.bind("<KeyRelease-Left>", lambda e: q.put("left"))
@@ -146,10 +182,10 @@ while True:
     if animatedGrid.finishedMovement == True:
         if not q.empty():
             move = q.get()
-            if move == "left": leftMove(board)
-            elif move == "right": rightMove(board)
-            elif move == "up": upMove(board)
-            elif move == "down": downMove(board)
+            if move == "left": newBoard = leftMove(board)
+            elif move == "right": newBoard = rightMove(board)
+            elif move == "up": newBoard = upMove(board)
+            elif move == "down": newBoard = downMove(board)
     if animatedGrid.finishedMovement == False:
-        animatedGrid.paintBoard(board)
+        animatedGrid.paintBoard(newBoard)
     window.update()
