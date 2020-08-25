@@ -3,10 +3,9 @@ import time
 import threading
 from queue import Queue
 
+#Defining some important variables
 blockWidth = 20
 blockMargin = 5
-q = Queue(maxsize = 3)
-
 
 class GraphicsClass:
     def __init__(self, master):
@@ -50,19 +49,20 @@ class GraphicsClass:
         for row in range(0,4):
             for col in range(0,4):
                 if board[row][col] != 0:
-                    self.moveBlock(self.block)
                     print(self.canvas.coords(self.block))
                     print((5 + row * blockWidth, 5 + col * blockWidth, 5 + (row + 1) * blockWidth, 5 + (col + 1) * blockWidth))
                     if self.canvas.coords(self.block) == [5 + row * blockWidth, 5 + col * blockWidth, 5 + (row + 1) * blockWidth, 5 + (col + 1) * blockWidth]:
                         self.finishedMovement = True
-                        break
+                    else: self.moveBlock(self.block)
         print(self.finishedMovement)
+
 
 window = tk.Tk()
 animatedGrid = GraphicsClass(window)
-
 board = [[1,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
 hasMerged = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+q = Queue(maxsize = 3)
+
 
 
 
@@ -106,7 +106,7 @@ def upMove(board):
     animatedGrid.moveBlockUp()
     animatedGrid.paintBoard(board)
 
-
+#Binds keys to actions. Queueing prevents animations from terminating previous animations while still running
 window.bind("<KeyRelease-Left>", lambda e: q.put("left"))
 window.bind("<KeyRelease-Right>", lambda e: q.put("right"))
 window.bind("<KeyRelease-Up>", lambda e: q.put("up"))
