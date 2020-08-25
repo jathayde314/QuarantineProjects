@@ -15,9 +15,16 @@ class Block:
         self.row = row
         self.col = col
         self.val = 1
+        self.finishedMovement = False
 
         self.rect = GraphicsClass.canvas.create_rectangle((col+1) * blockMargin + col * blockWidth,(row+1) * blockMargin + row * blockWidth, (col + 1) * (blockMargin + blockWidth), (row + 1) * (blockMargin + blockWidth),fill = "black")
         self.text = GraphicsClass.canvas.create_text(15 + col * (blockWidth + blockMargin),15 + row * (blockWidth + blockMargin),fill="white",font="Times 15", text= self.val)
+
+    def checkBlockLocation(self):
+        if GraphicsClass.canvas.coords(self.rect) == [5 + self.col * blockWidth, 5 + self.row * blockWidth, 5 + (self.col + 1) * blockWidth, 5 + (self.row + 1) * blockWidth]:
+            return True
+        else: return False
+
 
 
 
@@ -54,24 +61,37 @@ class GraphicsClass:
         self.x = 0
         self.y = -1
 
-    def paintBoard(self, animatedBoard):
-        self.finishedMovement = False
+    def checkIfBlocksMoving(self, animatedBoard):
+        retval = True
         for col in range(0,4):
             for row in range(0,4):
                 if animatedBoard[col][row] != None:
-                    if GraphicsClass.canvas.coords(animatedBoard[col][row].rect) == [5 + col * blockWidth, 5 + row * blockWidth, 5 + (col + 1) * blockWidth, 5 + (row + 1) * blockWidth]:
-                        self.finishedMovement = True
-                        if board[col][row] == None:
-                            GraphicsClass.canvas.delete(board[col][row].rect)
-                    else:
+                    if animatedBoard[col][row].checkBlockLocation() == True: #Checks if block is in final location
+                        retval = False
+        return retval
+
+    def deleteBlocks(self, animatedBoard):
+        for col in range(0,4):
+            for row in range(0,4):
+                if animatedBoard[col][row] != None:
+                    if board[col][row] == None:
+                        GraphicsClass.canvas.delete(animatedBoard[col][row].rect)
+                        print("block deleted")
+
+    def paintBoard(self, animatedBoard):
+        for col in range(0,4):
+            for row in range(0,4):
+                if animatedBoard[col][row] != None:
+                    if not animatedBoard[col][row].checkBlockLocation():
                         self.moveBlock(animatedBoard[col][row])
+        self.finishedMovement = self.checkIfBlocksMoving(animatedBoard)
 
 animatedGrid = GraphicsClass(window)
 block = Block(0,0)
 block1 = Block(0,1)
 board = [[block,block1,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
 hasMerged = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
-q = Queue(maxsize = 3)
+q = Queue()
 
 
 
@@ -179,13 +199,15 @@ window.bind("<KeyRelease-Up>", lambda e: q.put("up"))
 window.bind("<KeyRelease-Down>", lambda e: q.put("down"))
 
 while True:
-    if animatedGrid.finishedMovement == True:
+    if animatedGrid.checkIfBlocksMoving(board) == False:
         if not q.empty():
             move = q.get()
             if move == "left": newBoard = leftMove(board)
             elif move == "right": newBoard = rightMove(board)
             elif move == "up": newBoard = upMove(board)
             elif move == "down": newBoard = downMove(board)
-    if animatedGrid.finishedMovement == False:
+    if animatedGrid.checkIfBlocksMoving(board):
         animatedGrid.paintBoard(newBoard)
+        if animatedGrid.checkIfBlocksMoving(board) == False:
+            animatedGrid.deleteBlocks(newBoard)
     window.update()
