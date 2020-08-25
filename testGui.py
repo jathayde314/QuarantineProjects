@@ -6,15 +6,25 @@ from queue import Queue
 #Defining some important variables
 blockWidth = 20
 blockMargin = 5
+window = tk.Tk()
+
+
+class Block:
+    def __init__(self, row, col):
+        self.row = row
+        self.col = col
+        self.val = 1
+
+        self.rect = GraphicsClass.canvas.create_rectangle((row+1) * blockMargin + row * blockWidth,(col+1) * blockMargin + col * blockWidth, (row + 1) * (blockMargin + blockWidth), (col + 1) * (blockMargin + blockWidth),fill = "black")
+        self.text = GraphicsClass.canvas.create_text(15,15,fill="white",font="Times 15", text= self.val)
+
+
 
 class GraphicsClass:
+    canvas = tk.Canvas(window)
+
     def __init__(self, master):
-        self.canvas = tk.Canvas(master)
-
-        self.block = self.canvas.create_rectangle(5,5,25,25,fill = "black")
-        self.text = self.canvas.create_text(15,15,fill="white",font="Times 15",
-                        text= "1")
-
+        #self.createBlock()
         self.finishedMovement = True
 
 
@@ -22,11 +32,17 @@ class GraphicsClass:
         self.x = 0
         self.y = 0
 
-        self.canvas.pack()
+        GraphicsClass.canvas.pack()
+
+    def createBlock(self):
+        block = Block(0,0)
+        #self.block = self.canvas.create_rectangle(5,5,25,25,fill = "black")
+        #self.text = self.canvas.create_text(15,15,fill="white",font="Times 15",
+                        #text= block.val)
 
     def moveBlock(self, block):
-        self.canvas.move(self.block, self.x, self.y)
-        self.canvas.move(self.text, self.x, self.y)
+        GraphicsClass.canvas.move(block.rect, self.x, self.y)
+        GraphicsClass.canvas.move(block.text, self.x, self.y)
 
     def moveBlockRight(self):
         self.x = 1
@@ -49,17 +65,15 @@ class GraphicsClass:
         for row in range(0,4):
             for col in range(0,4):
                 if board[row][col] != 0:
-                    print(self.canvas.coords(self.block))
-                    print((5 + row * blockWidth, 5 + col * blockWidth, 5 + (row + 1) * blockWidth, 5 + (col + 1) * blockWidth))
-                    if self.canvas.coords(self.block) == [5 + row * blockWidth, 5 + col * blockWidth, 5 + (row + 1) * blockWidth, 5 + (col + 1) * blockWidth]:
+                    if GraphicsClass.canvas.coords(board[row][col].rect) == [5 + row * blockWidth, 5 + col * blockWidth, 5 + (row + 1) * blockWidth, 5 + (col + 1) * blockWidth]:
                         self.finishedMovement = True
-                    else: self.moveBlock(self.block)
-        print(self.finishedMovement)
+                    else:
+                        self.moveBlock(board[row][col])
 
-
-window = tk.Tk()
 animatedGrid = GraphicsClass(window)
-board = [[1,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+block = Block(0,0)
+block1 = Block(1,0)
+board = [[block,block1,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
 hasMerged = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
 q = Queue(maxsize = 3)
 
@@ -70,8 +84,14 @@ def rightMove(board):
     for row in range(0,3):
         for col in range(0,4):
             if board[row][col] != 0:
-                board[row+1][col] = board[row][col]
-                board[row][col] = 0
+                if board[row+1][col] == 0:
+                    board[row+1][col] = board[row][col]
+                    board[row+1][col].row = board[row+1][col].row + 1
+                    board[row][col] = 0
+                if board[row+1][col] == board[row][col] & hasMerged[row+1][col] == 0:
+                    board[row+1][col].val = board[row][col] + 1
+                    board[row][col] = 0
+                #nothing happens and blocks dont merge otherwise
     print(board)
     animatedGrid.moveBlockRight()
     animatedGrid.paintBoard(board)
