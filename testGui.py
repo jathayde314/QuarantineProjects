@@ -1,9 +1,11 @@
 import tkinter as tk
 import time
 import threading
+from queue import Queue
 
 blockWidth = 20
 blockMargin = 5
+q = Queue(maxsize = 3)
 
 
 class GraphicsClass:
@@ -105,12 +107,19 @@ def upMove(board):
     animatedGrid.paintBoard(board)
 
 
-window.bind("<KeyRelease-Left>", lambda e: leftMove(board))
-window.bind("<KeyRelease-Right>", lambda e: rightMove(board))
-window.bind("<KeyRelease-Up>", lambda e: upMove(board))
-window.bind("<KeyRelease-Down>", lambda e: downMove(board))
+window.bind("<KeyRelease-Left>", lambda e: q.put("left"))
+window.bind("<KeyRelease-Right>", lambda e: q.put("right"))
+window.bind("<KeyRelease-Up>", lambda e: q.put("up"))
+window.bind("<KeyRelease-Down>", lambda e: q.put("down"))
 
 while True:
+    if animatedGrid.finishedMovement == True:
+        if not q.empty():
+            move = q.get()
+            if move == "left": leftMove(board)
+            elif move == "right": rightMove(board)
+            elif move == "up": upMove(board)
+            elif move == "down": downMove(board)
     if animatedGrid.finishedMovement == False:
         animatedGrid.paintBoard(board)
     window.update()
