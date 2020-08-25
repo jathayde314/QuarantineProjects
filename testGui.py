@@ -10,13 +10,13 @@ window = tk.Tk()
 
 
 class Block:
-    def __init__(self, row, col):
+    def __init__(self, col, row):
         self.row = row
         self.col = col
         self.val = 1
 
-        self.rect = GraphicsClass.canvas.create_rectangle((row+1) * blockMargin + row * blockWidth,(col+1) * blockMargin + col * blockWidth, (row + 1) * (blockMargin + blockWidth), (col + 1) * (blockMargin + blockWidth),fill = "black")
-        self.text = GraphicsClass.canvas.create_text(15,15,fill="white",font="Times 15", text= self.val)
+        self.rect = GraphicsClass.canvas.create_rectangle((col+1) * blockMargin + col * blockWidth,(row+1) * blockMargin + row * blockWidth, (col + 1) * (blockMargin + blockWidth), (row + 1) * (blockMargin + blockWidth),fill = "black")
+        self.text = GraphicsClass.canvas.create_text(15 + col * (blockWidth + blockMargin),15 + row * (blockWidth + blockMargin),fill="white",font="Times 15", text= self.val)
 
 
 
@@ -24,9 +24,7 @@ class GraphicsClass:
     canvas = tk.Canvas(window)
 
     def __init__(self, master):
-        #self.createBlock()
         self.finishedMovement = True
-
 
         #Sets movement directions to nothing
         self.x = 0
@@ -34,11 +32,6 @@ class GraphicsClass:
 
         GraphicsClass.canvas.pack()
 
-    def createBlock(self):
-        block = Block(0,0)
-        #self.block = self.canvas.create_rectangle(5,5,25,25,fill = "black")
-        #self.text = self.canvas.create_text(15,15,fill="white",font="Times 15",
-                        #text= block.val)
 
     def moveBlock(self, block):
         GraphicsClass.canvas.move(block.rect, self.x, self.y)
@@ -62,18 +55,18 @@ class GraphicsClass:
 
     def paintBoard(self, board):
         self.finishedMovement = False
-        for row in range(0,4):
-            for col in range(0,4):
-                if board[row][col] != 0:
-                    if GraphicsClass.canvas.coords(board[row][col].rect) == [5 + row * blockWidth, 5 + col * blockWidth, 5 + (row + 1) * blockWidth, 5 + (col + 1) * blockWidth]:
+        for col in range(0,4):
+            for row in range(0,4):
+                if board[col][row] != None:
+                    if GraphicsClass.canvas.coords(board[col][row].rect) == [5 + col * blockWidth, 5 + row * blockWidth, 5 + (col + 1) * blockWidth, 5 + (row + 1) * blockWidth]:
                         self.finishedMovement = True
                     else:
-                        self.moveBlock(board[row][col])
+                        self.moveBlock(board[col][row])
 
 animatedGrid = GraphicsClass(window)
 block = Block(0,0)
-block1 = Block(1,0)
-board = [[block,block1,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+block1 = Block(0,1)
+board = [[block,block1,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
 hasMerged = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
 q = Queue(maxsize = 3)
 
@@ -81,47 +74,64 @@ q = Queue(maxsize = 3)
 
 
 def rightMove(board):
-    for row in range(0,3):
-        for col in range(0,4):
-            if board[row][col] != 0:
-                if board[row+1][col] == 0:
-                    board[row+1][col] = board[row][col]
-                    board[row+1][col].row = board[row+1][col].row + 1
-                    board[row][col] = 0
-                if board[row+1][col] == board[row][col] & hasMerged[row+1][col] == 0:
-                    board[row+1][col].val = board[row][col] + 1
-                    board[row][col] = 0
+    for col in [2,1,2,0,1,2]:
+        for row in range(0,4): #Order moves right most, then works its way left.
+            if board[col][row] != None:
+                if board[col+1][row] == None:
+                    board[col+1][row] = board[col][row]
+                    board[col+1][row].col = board[col+1][row].col + 1
+                    board[col][row] = None
+                if board[col+1][row] == board[col][row] and hasMerged[col+1][row] == 0:
+                    board[col+1][row].val = board[col][row] + 1
+                    board[col][row] = None
                 #nothing happens and blocks dont merge otherwise
     print(board)
     animatedGrid.moveBlockRight()
     animatedGrid.paintBoard(board)
 
 def downMove(board):
-    for row in range(0,4):
-        for col in range(0,3):
-            if board[row][col] != 0:
-                board[row][col+1] = board[row][col]
-                board[row][col] = 0
+    for col in range(0,4):
+        for row in [2,1,2,0,1,2]:
+            if board[col][row] != None:
+                if board[col][row+1] == None:
+                    board[col][row+1] = board[col][row]
+                    board[col][row+1].row = board[col][row+1].row + 1
+                    board[col][row] = None
+                if board[col][row+1] == board[col][row] and hasMerged[col][row+1] == 0:
+                    board[col][row+1].val = board[col][row] + 1
+                    board[col][row] = None
+                #nothing happens and blocks dont merge otherwise
     print(board)
     animatedGrid.moveBlockDown()
     animatedGrid.paintBoard(board)
 
 def leftMove(board):
-    for row in [3,2,1]:
-        for col in range(0,4):
-            if board[row][col] != 0:
-                board[row-1][col] = board[row][col]
-                board[row][col] = 0
+    for col in [1,2,1,3,2,1]:
+        for row in range(0,4):
+            if board[col][row] != None:
+                if board[col-1][row] == None:
+                    board[col-1][row] = board[col][row]
+                    board[col-1][row].col = board[col-1][row].col - 1
+                    board[col][row] = None
+                if board[col-1][row] == board[col][row] and hasMerged[col+1][row] == 0:
+                    board[col-1][row].val = board[col][row] + 1
+                    board[col][row] = None
     print(board)
     animatedGrid.moveBlockLeft()
     animatedGrid.paintBoard(board)
 
 def upMove(board):
-    for row in range(0,4):
-        for col in [3,2,1]:
-            if board[row][col] != 0:
-                board[row][col-1] = board[row][col]
-                board[row][col] = 0
+    for row in [1,2,1,3,2,1]:
+        for col in range(0,4):
+            if board[col][row] != None:
+                if board[col][row-1] == None:
+                    board[col][row-1] = board[col][row]
+                    board[col][row-1].row = board[col][row-1].row - 1
+                    board[col][row] = None
+                if board[col][row-1] == board[col][row] and hasMerged[col][row-1] == 0:
+                    board[col][row-1].val = board[col][row] + 1
+                    board[col][row] = None
+                #nothing happens and blocks dont merge otherwise
     print(board)
     animatedGrid.moveBlockUp()
     animatedGrid.paintBoard(board)
