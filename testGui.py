@@ -9,7 +9,11 @@ blockMargin = 5
 class GraphicsClass:
     def __init__(self, master):
         self.canvas = tk.Canvas(master)
+
         self.block = self.canvas.create_rectangle(5,5,25,25,fill = "black")
+        self.text = self.canvas.create_text(15,15,fill="white",font="Times 15",
+                        text= "1")
+
         self.finishedMovement = True
 
 
@@ -21,6 +25,7 @@ class GraphicsClass:
 
     def moveBlock(self, block):
         self.canvas.move(self.block, self.x, self.y)
+        self.canvas.move(self.text, self.x, self.y)
 
     def moveBlockRight(self):
         self.x = 1
