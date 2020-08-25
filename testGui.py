@@ -7,14 +7,31 @@ class Board:
         self.canvas = tk.Canvas(master)
         self.block = self.canvas.create_rectangle(5,5,25,25,fill = "black")
         self.canvas.pack()
-        self.moveRight()
+        #self.moveRight()
 
     def moveRight(self):
-        self.canvas.move(self.block, 5, 0)
-        self.canvas.after(100, self.moveRight)
+        self.canvas.move(self.block, 1, 0)
+        self.canvas.after(100)
+
+    def moveDown(self):
+        self.canvas.move(self.block, 0, 1)
+        self.canvas.after(100)
+
+    def moveLeft(self):
+        self.canvas.move(self.block, -1, 0)
+        self.canvas.after(100)
+
+    def moveUp(self):
+        self.canvas.move(self.block, 0, -1)
 
 
 
 window = tk.Tk()
 board = Board(window)
+
+window.bind("<KeyRelease-Left>", lambda e: board.moveLeft())
+window.bind("<KeyRelease-Right>", lambda e: board.moveRight())
+window.bind("<KeyRelease-Up>", lambda e: board.moveUp())
+window.bind("<KeyRelease-Down>", lambda e: board.moveDown())
+
 window.mainloop()
