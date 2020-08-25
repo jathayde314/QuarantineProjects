@@ -80,7 +80,7 @@ def downMove(board):
     animatedGrid.paintBoard(board)
 
 def leftMove(board):
-    for row in range(1,4):
+    for row in [3,2,1]:
         for col in range(0,4):
             if board[row][col] != 0:
                 board[row-1][col] = board[row][col]
@@ -91,7 +91,7 @@ def leftMove(board):
 
 def upMove(board):
     for row in range(0,4):
-        for col in range(1,4):
+        for col in [3,2,1]:
             if board[row][col] != 0:
                 board[row][col-1] = board[row][col]
                 board[row][col] = 0
