@@ -5,7 +5,7 @@ import copy
 from queue import Queue
 
 #Defining some important variables
-blockWidth = 20
+blockWidth = 30
 blockMargin = 5
 window = tk.Tk()
 
@@ -18,12 +18,18 @@ class Block:
         self.finishedMovement = False
 
         self.rect = GraphicsClass.canvas.create_rectangle((col+1) * blockMargin + col * blockWidth,(row+1) * blockMargin + row * blockWidth, (col + 1) * (blockMargin + blockWidth), (row + 1) * (blockMargin + blockWidth),fill = "black")
-        self.text = GraphicsClass.canvas.create_text(15 + col * (blockWidth + blockMargin),15 + row * (blockWidth + blockMargin),fill="white",font="Times 15", text= self.val)
+        self.text = GraphicsClass.canvas.create_text(20 + col * (blockWidth + blockMargin),20 + row * (blockWidth + blockMargin),fill="white",font="Times 15", text= self.val)
 
     def checkBlockLocation(self):
-        if GraphicsClass.canvas.coords(self.rect) == [5 + self.col * blockWidth, 5 + self.row * blockWidth, 5 + (self.col + 1) * blockWidth, 5 + (self.row + 1) * blockWidth]:
+        #print(GraphicsClass.canvas.coords(self.rect))
+        if GraphicsClass.canvas.coords(self.rect) == [(self.col+1) * blockMargin + self.col * blockWidth,(self.row+1) * blockMargin + self.row * blockWidth, (self.col + 1) * (blockMargin + blockWidth), (self.row + 1) * (blockMargin + blockWidth)]:
             return True
         else: return False
+
+    def update(self):
+        print(self.val)
+        GraphicsClass.canvas.delete(self.text)
+        self.text = animatedGrid.canvas.create_text(20 + self.col * (blockWidth + blockMargin),20 + self.row * (blockWidth + blockMargin),fill="gray",font="Times 15", text= self.val)
 
 
 
@@ -46,28 +52,28 @@ class GraphicsClass:
         GraphicsClass.canvas.move(block.text, self.x, self.y)
 
     def moveBlockRight(self):
-        self.x = 1
+        self.x = 5
         self.y = 0
 
     def moveBlockDown(self):
         self.x = 0
-        self.y = 1
+        self.y = 5
 
     def moveBlockLeft(self):
-        self.x = -1
+        self.x = -5
         self.y = 0
 
     def moveBlockUp(self):
         self.x = 0
-        self.y = -1
+        self.y = -5
 
     def checkIfBlocksMoving(self, animatedBoard):
-        retval = True
+        retval = False
         for col in range(0,4):
             for row in range(0,4):
                 if animatedBoard[col][row] != None:
-                    if animatedBoard[col][row].checkBlockLocation() == True: #Checks if block is in final location
-                        retval = False
+                    if not animatedBoard[col][row].checkBlockLocation(): #Checks if block is in final location
+                        retval = True
         return retval
 
     def deleteBlocks(self, animatedBoard):
@@ -76,7 +82,14 @@ class GraphicsClass:
                 if animatedBoard[col][row] != None:
                     if board[col][row] == None:
                         GraphicsClass.canvas.delete(animatedBoard[col][row].rect)
+                        GraphicsClass.canvas.delete(animatedBoard[col][row].text)
                         print("block deleted")
+
+    def updateBlocks(self, animatedBoard):
+        for col in range(0,4):
+            for row in range(0,4):
+                if animatedBoard[col][row] != None:
+                    animatedBoard[col][row].update()
 
     def paintBoard(self, animatedBoard):
         for col in range(0,4):
@@ -89,7 +102,8 @@ class GraphicsClass:
 animatedGrid = GraphicsClass(window)
 block = Block(0,0)
 block1 = Block(0,1)
-board = [[block,block1,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
+block2 = Block(1,0)
+board = [[block,block1,None,None],[block2,None,None,None],[None,None,None,None],[None,None,None,None]]
 hasMerged = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
 q = Queue()
 
@@ -110,13 +124,10 @@ def rightMove(board):
                         board[col+1][row].val = board[col][row].val + 1
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
-                #nothing happens and blocks dont merge otherwise
     newBoard = copy.deepcopy(board)
     for tile in deletedTiles:
         newBoard[tile.col][tile.row] = tile
 
-    print(board)
-    print(newBoard)
     animatedGrid.moveBlockRight()
     animatedGrid.paintBoard(newBoard)
     return newBoard
@@ -135,6 +146,7 @@ def downMove(board):
                 elif board[col][row+1] != None:
                     if board[col][row+1].val == board[col][row].val and hasMerged[col][row+1] == 0:
                         board[col][row+1].val = board[col][row].val + 1
+                        board[col][row+1].update()
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
                 #nothing happens and blocks dont merge otherwise
@@ -142,8 +154,6 @@ def downMove(board):
     for tile in deletedTiles:
         newBoard[tile.col][tile.row] = tile
 
-    print(board)
-    print(newBoard)
     animatedGrid.paintBoard(board)
     return newBoard
 
@@ -164,7 +174,6 @@ def leftMove(board):
     newBoard = copy.deepcopy(board)
     for tile in deletedTiles:
         newBoard[tile.col][tile.row] = tile
-    print(board)
     animatedGrid.moveBlockLeft()
     animatedGrid.paintBoard(board)
     return newBoard
@@ -187,7 +196,6 @@ def upMove(board):
     newBoard = copy.deepcopy(board)
     for tile in deletedTiles:
         newBoard[tile.col][tile.row] = tile
-    print(board)
     animatedGrid.moveBlockUp()
     animatedGrid.paintBoard(board)
     return newBoard
@@ -199,7 +207,7 @@ window.bind("<KeyRelease-Up>", lambda e: q.put("up"))
 window.bind("<KeyRelease-Down>", lambda e: q.put("down"))
 
 while True:
-    if animatedGrid.checkIfBlocksMoving(board) == False:
+    if not animatedGrid.checkIfBlocksMoving(board):
         if not q.empty():
             move = q.get()
             if move == "left": newBoard = leftMove(board)
@@ -208,6 +216,7 @@ while True:
             elif move == "down": newBoard = downMove(board)
     if animatedGrid.checkIfBlocksMoving(board):
         animatedGrid.paintBoard(newBoard)
-        if animatedGrid.checkIfBlocksMoving(board) == False:
+        if not animatedGrid.checkIfBlocksMoving(board):
             animatedGrid.deleteBlocks(newBoard)
+            animatedGrid.updateBlocks(newBoard)
     window.update()
