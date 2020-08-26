@@ -65,26 +65,19 @@ class GraphicsClass:
         self.x = 0
         self.y = -10
 
-    def checkIfBlocksMoving(self, animatedBoard):
+    def checkIfBlocksMoving(self, animatedBoard, deletedTiles):
         retval = False
         for col in range(0,4):
             for row in range(0,4):
                 if animatedBoard[col][row] != None:
                     if not animatedBoard[col][row].checkBlockLocation(): #Checks if block is in final location
                         retval = True
-        return retval
+        #checks if deleted tiles are moving
+        for tile in deletedTiles:
+            if not tile.checkBlockLocation():
+                retval = True
 
-    def deleteBlocks(self, animatedBoard):
-        print("Delete blocks called")
-        for col in range(0,4):
-            for row in range(0,4):
-                print((col,row))
-                print(animatedBoard[col][row])
-                print(board[col][row])
-                if animatedBoard[col][row] != None:
-                    if board[col][row] == None:
-                        GraphicsClass.canvas.delete(animatedBoard[col][row].rect)
-                        GraphicsClass.canvas.delete(animatedBoard[col][row].text)
+        return retval
 
     def updateBlocks(self, animatedBoard):
         for col in range(0,4):
@@ -103,15 +96,6 @@ class GraphicsClass:
                 self.moveBlock(tile)
 
 
-animatedGrid = GraphicsClass(window)
-board = [[None,None,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
-block0 = Block(0,0, board)
-block1 = Block(0,1, board)
-block1 = Block(0,2, board)
-hasMerged = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
-q = Queue()
-
-
 def generateBlock(board):
     openTiles = []
     for col in range(0,4):
@@ -126,6 +110,13 @@ def resetHasMerged():
     for col in range(0,4):
         for row in range(0,4):
             hasMerged[col][row] = 0
+
+def deleteMergedTiles(deletedTiles):
+    for tile in deletedTiles:
+        GraphicsClass.canvas.delete(tile.rect)
+        GraphicsClass.canvas.delete(tile.text)
+        if board[tile.col][tile.row] == tile:
+            board[tile.col][tile.row] = None
 
 def rightMove(board):
     deletedTiles = []
@@ -218,8 +209,20 @@ window.bind("<KeyRelease-Right>", lambda e: q.put("right"))
 window.bind("<KeyRelease-Up>", lambda e: q.put("up"))
 window.bind("<KeyRelease-Down>", lambda e: q.put("down"))
 
+
+animatedGrid = GraphicsClass(window)
+board = [[None,None,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
+block0 = Block(0,0, board)
+block1 = Block(0,1, board)
+#block2 = Block(0,3, board)
+hasMerged = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+q = Queue()
+
+#Defining deleted tiles in non local environment
+deletedTiles = []
+
 while True:
-    if not animatedGrid.checkIfBlocksMoving(board):
+    if not animatedGrid.checkIfBlocksMoving(board, []): #No blocks are moving, in between actions
         if not q.empty():
             move = q.get()
             if move == "left": deletedTiles = leftMove(board)
@@ -228,14 +231,10 @@ while True:
             elif move == "down": deletedTiles = downMove(board)
 
             animatedGrid.paintBoard(board, deletedTiles)
-            if not animatedGrid.checkIfBlocksMoving(board):
+            if not animatedGrid.checkIfBlocksMoving(board, deletedTiles): #No blocks are moving after initial move
                 animatedGrid.updateBlocks(board) #Changes number values
                 #Deletes merged tiles from animated board
-                for tile in deletedTiles:
-                    GraphicsClass.canvas.delete(tile.rect)
-                    GraphicsClass.canvas.delete(tile.text)
-                    if board[tile.col][tile.row] == tile:
-                        board[tile.col][tile.row] = None
+                deleteMergedTiles(deletedTiles)
                 mergeOccured = False
                 for col in range(0,4):
                     for row in range(0,4):
@@ -244,16 +243,12 @@ while True:
                 if mergeOccured: generateBlock(board) #Creates new block
                 resetHasMerged()
 
-    if animatedGrid.checkIfBlocksMoving(board):
+    if animatedGrid.checkIfBlocksMoving(board, deletedTiles): #In process of moving
         animatedGrid.paintBoard(board, deletedTiles)
-        if not animatedGrid.checkIfBlocksMoving(board): #Happens when final block moves into place
+        if not animatedGrid.checkIfBlocksMoving(board, deletedTiles): #Happens when final block moves into place
             animatedGrid.updateBlocks(board) #Changes number values
             #Deletes merged tiles from animated board
-            for tile in deletedTiles:
-                GraphicsClass.canvas.delete(tile.rect)
-                GraphicsClass.canvas.delete(tile.text)
-                if board[tile.col][tile.row] == tile:
-                    board[tile.col][tile.row] = None
+            deleteMergedTiles(deletedTiles)
             print(hasMerged)
             resetHasMerged()
             generateBlock(board) #Creates new block
