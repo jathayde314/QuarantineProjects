@@ -1,8 +1,7 @@
 import tkinter as tk
-import time
-import threading
 import copy
 from queue import Queue
+import random
 
 #Defining some important variables
 blockWidth = 30
@@ -11,25 +10,23 @@ window = tk.Tk()
 
 
 class Block:
-    def __init__(self, col, row):
+    def __init__(self, col, row, board):
         self.row = row
         self.col = col
         self.val = 1
-        self.finishedMovement = False
+        board[col][row] = self
 
         self.rect = GraphicsClass.canvas.create_rectangle((col+1) * blockMargin + col * blockWidth,(row+1) * blockMargin + row * blockWidth, (col + 1) * (blockMargin + blockWidth), (row + 1) * (blockMargin + blockWidth),fill = "black")
-        self.text = GraphicsClass.canvas.create_text(20 + col * (blockWidth + blockMargin),20 + row * (blockWidth + blockMargin),fill="white",font="Times 15", text= self.val)
+        self.text = GraphicsClass.canvas.create_text(20 + col * (blockWidth + blockMargin),20 + row * (blockWidth + blockMargin),fill="white",font="Times 15", text= 2**self.val)
 
     def checkBlockLocation(self):
-        #print(GraphicsClass.canvas.coords(self.rect))
         if GraphicsClass.canvas.coords(self.rect) == [(self.col+1) * blockMargin + self.col * blockWidth,(self.row+1) * blockMargin + self.row * blockWidth, (self.col + 1) * (blockMargin + blockWidth), (self.row + 1) * (blockMargin + blockWidth)]:
             return True
         else: return False
 
     def update(self):
-        print(self.val)
         GraphicsClass.canvas.delete(self.text)
-        self.text = GraphicsClass.canvas.create_text(20 + self.col * (blockWidth + blockMargin),20 + self.row * (blockWidth + blockMargin),fill="gray",font="Times 15", text= self.val)
+        self.text = GraphicsClass.canvas.create_text(20 + self.col * (blockWidth + blockMargin),20 + self.row * (blockWidth + blockMargin),fill="white",font="Times 15", text= 2**self.val)
 
 
 
@@ -38,8 +35,6 @@ class GraphicsClass:
     canvas = tk.Canvas(window)
 
     def __init__(self, master):
-        self.finishedMovement = True
-
         #Sets movement directions to nothing
         self.x = 0
         self.y = 0
@@ -83,7 +78,6 @@ class GraphicsClass:
                     if board[col][row] == None:
                         GraphicsClass.canvas.delete(animatedBoard[col][row].rect)
                         GraphicsClass.canvas.delete(animatedBoard[col][row].text)
-                        print("block deleted")
 
     def updateBlocks(self, animatedBoard):
         for col in range(0,4):
@@ -97,20 +91,25 @@ class GraphicsClass:
                 if animatedBoard[col][row] != None:
                     if not animatedBoard[col][row].checkBlockLocation():
                         self.moveBlock(animatedBoard[col][row])
-        self.finishedMovement = self.checkIfBlocksMoving(animatedBoard)
-
 
 
 animatedGrid = GraphicsClass(window)
-block0 = Block(0,0)
-block1 = Block(0,3)
-block2 = Block(1,0)
-board = [[block0,None,None,block1],[block2,None,None,None],[None,None,None,None],[None,None,None,None]]
+board = [[None,None,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
+block0 = Block(0,0, board)
+block1 = Block(0,3, board)
+block2 = Block(1,0, board)
 hasMerged = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
 q = Queue()
 
 
-
+def generateBlock(board):
+    openTiles = []
+    for col in range(0,4):
+        for row in range(0,4):
+            if board[col][row] == None:
+                openTiles.append((col,row))
+    position = random.choice(openTiles)
+    block = Block(position[0], position[1], board)
 
 def rightMove(board):
     deletedTiles = []
@@ -217,6 +216,7 @@ while True:
     if animatedGrid.checkIfBlocksMoving(board):
         animatedGrid.paintBoard(newBoard)
         if not animatedGrid.checkIfBlocksMoving(newBoard):
-            animatedGrid.updateBlocks(board)
-            animatedGrid.deleteBlocks(newBoard)
+            animatedGrid.updateBlocks(board) #Changes number values
+            animatedGrid.deleteBlocks(newBoard) #Deletes merged tiles from animated board
+            generateBlock(board) #Creates new block
     window.update()
