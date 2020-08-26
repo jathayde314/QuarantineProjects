@@ -96,7 +96,7 @@ class GraphicsClass:
 animatedGrid = GraphicsClass(window)
 board = [[None,None,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
 block0 = Block(0,0, board)
-block1 = Block(0,3, board)
+block1 = Block(0,1, board)
 block2 = Block(1,0, board)
 hasMerged = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
 q = Queue()
@@ -110,6 +110,12 @@ def generateBlock(board):
                 openTiles.append((col,row))
     position = random.choice(openTiles)
     block = Block(position[0], position[1], board)
+    print("block generated")
+
+def resetHasMerged():
+    for col in range(0,4):
+        for row in range(0,4):
+            hasMerged[col][row] = 0
 
 def rightMove(board):
     deletedTiles = []
@@ -122,6 +128,7 @@ def rightMove(board):
                     board[col][row] = None
                 elif board[col+1][row] != None:
                     if board[col+1][row].val == board[col][row].val and hasMerged[col+1][row] == 0:
+                        hasMerged[col+1][row] = 1
                         board[col+1][row].val = board[col][row].val + 1
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
@@ -144,6 +151,7 @@ def downMove(board):
                     board[col][row] = None
                 elif board[col][row+1] != None:
                     if board[col][row+1].val == board[col][row].val and hasMerged[col][row+1] == 0:
+                        hasMerged[col][row+1] = 1
                         board[col][row+1].val = board[col][row].val + 1
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
@@ -166,6 +174,7 @@ def leftMove(board):
                     board[col][row] = None
                 elif board[col-1][row] != None:
                     if board[col-1][row].val == board[col][row].val and hasMerged[col-1][row] == 0:
+                        hasMerged[col-1][row] = 1
                         board[col-1][row].val = board[col][row].val + 1
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
@@ -187,7 +196,8 @@ def upMove(board):
                     board[col][row-1].row = board[col][row-1].row - 1
                     board[col][row] = None
                 elif board[col][row-1] != None:
-                    if board[col][row-1].val == board[col][row].val and hasMerged[col][row+1] == 0:
+                    if board[col][row-1].val == board[col][row].val and hasMerged[col][row-1] == 0:
+                        hasMerged[col][row-1] = 1
                         board[col][row-1].val = board[col][row].val + 1
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
@@ -213,9 +223,23 @@ while True:
             elif move == "right": newBoard = rightMove(board)
             elif move == "up": newBoard = upMove(board)
             elif move == "down": newBoard = downMove(board)
+
+            animatedGrid.paintBoard(newBoard)
+            if not animatedGrid.checkIfBlocksMoving(newBoard):
+                animatedGrid.updateBlocks(board) #Changes number values
+                animatedGrid.deleteBlocks(newBoard) #Deletes merged tiles from animated board
+                mergeOccured = False
+                for col in range(0,4):
+                    for row in range(0,4):
+                        if hasMerged[col][row] == 1:
+                            mergeOccured = True
+                if mergeOccured: generateBlock(board) #Creates new block
+                resetHasMerged()
+
     if animatedGrid.checkIfBlocksMoving(board):
         animatedGrid.paintBoard(newBoard)
-        if not animatedGrid.checkIfBlocksMoving(newBoard):
+        if not animatedGrid.checkIfBlocksMoving(newBoard): #Happens when final block moves into place
+            resetHasMerged()
             animatedGrid.updateBlocks(board) #Changes number values
             animatedGrid.deleteBlocks(newBoard) #Deletes merged tiles from animated board
             generateBlock(board) #Creates new block
