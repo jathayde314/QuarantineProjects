@@ -97,7 +97,7 @@ animatedGrid = GraphicsClass(window)
 board = [[None,None,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
 block0 = Block(0,0, board)
 block1 = Block(0,1, board)
-block2 = Block(1,0, board)
+block2 = Block(0,2, board)
 hasMerged = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
 q = Queue()
 
@@ -109,7 +109,7 @@ def generateBlock(board):
             if board[col][row] == None:
                 openTiles.append((col,row))
     position = random.choice(openTiles)
-    block = Block(position[0], position[1], board)
+    Block(position[0], position[1], board)
     print("block generated")
 
 def resetHasMerged():
@@ -143,7 +143,7 @@ def rightMove(board):
 def downMove(board):
     deletedTiles = []
     for col in range(0,4):
-        for row in [2,1,2,0,1,2]: #Order moves right most, then works its way left.
+        for row in [2,1,0]: #Order moves right most, then works its way left.
             if board[col][row] != None:
                 if board[col][row+1] == None:
                     board[col][row+1] = board[col][row]
@@ -239,8 +239,8 @@ while True:
     if animatedGrid.checkIfBlocksMoving(board):
         animatedGrid.paintBoard(newBoard)
         if not animatedGrid.checkIfBlocksMoving(newBoard): #Happens when final block moves into place
-            resetHasMerged()
             animatedGrid.updateBlocks(board) #Changes number values
             animatedGrid.deleteBlocks(newBoard) #Deletes merged tiles from animated board
+            resetHasMerged()
             generateBlock(board) #Creates new block
     window.update()
