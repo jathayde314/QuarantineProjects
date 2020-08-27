@@ -3,7 +3,7 @@ import copy
 from queue import Queue
 import random
 
-#Bug occurs where move no longer works after a couple turns
+#TODO: Make mergers/updating values occur when blocks reach final location rather than all at the end.
 
 
 #Defining some important variables
@@ -116,10 +116,13 @@ def resetHasMerged():
 
 def deleteMergedTiles(deletedTiles):
     for tile in deletedTiles:
-        canvas.delete(tile.rect)
-        canvas.delete(tile.text)
-        if board[tile.col][tile.row] == tile:
-            board[tile.col][tile.row] = None
+        if tile.checkBlockLocation():
+            canvas.delete(tile.rect)
+            canvas.delete(tile.text)
+            if board[tile.col][tile.row] == tile:
+                board[tile.col][tile.row] = None
+            deletedTiles.remove(tile)
+    return deletedTiles
 
 def rightMove(board):
     print("right move")
@@ -243,6 +246,7 @@ while True:
 
     if checkIfBlocksMoving(board, deletedTiles): #In process of moving
         paintBoard(board, deletedTiles)
+        deletedTiles = deleteMergedTiles(deletedTiles)
         if not checkIfBlocksMoving(board, deletedTiles): #Happens when final block moves into place
             updateBlocks(board) #Changes number values
             #Deletes merged tiles from animated board
