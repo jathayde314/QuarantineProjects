@@ -1,8 +1,7 @@
 import tkinter as tk
 import copy
-from queue import Queue
 import random
-
+import time
 
 #Defining some important variables
 blockWidth = 40
@@ -99,11 +98,16 @@ def paintBoard(animatedBoard, deletedTiles):
 
 def generateBlock(board):
     openTiles = []
+    boardNotEmpty = False
     for col in range(0,4):
         for row in range(0,4):
             if board[col][row] == None:
                 openTiles.append((col,row))
+            else: boardNotEmpty = True
     position = random.choice(openTiles)
+    if boardNotEmpty:
+        window.update() #prevents moving blocks from lagging
+        time.sleep(0.25)
     Block(position[0], position[1], board)
 
 def resetHasMerged(board):
@@ -225,8 +229,9 @@ def cycle(board, q, deletedTiles = []):
                         if board[col][row] != None:
                             if board[col][row].hasMerged:
                                 mergeOccured = True
-                if mergeOccured: generateBlock(board) #Creates new block
-                resetHasMerged(board)
+                if mergeOccured:
+                    generateBlock(board) #Creates new block
+                    resetHasMerged(board)
 
     if checkIfBlocksMoving(board, deletedTiles): #In process of moving
         paintBoard(board, deletedTiles)
@@ -253,5 +258,6 @@ def runGame(q):
     generateBlock(board)
     generateBlock(board)
     deletedTiles = []
+    setKeyboardBindings(q)
     while True:
         (board, deletedTiles) = cycle(board, q, deletedTiles)

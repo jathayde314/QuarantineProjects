@@ -1,16 +1,5 @@
 from testGui import rightMove, downMove, leftMove, upMove, setKeyboardBindings, runGame
-from queue import Queue
+import multiprocessing
 
-q = Queue()
-q1 = Queue()
-setKeyboardBindings(q)
-
-
+q = multiprocessing.Queue()
 runGame(q)
-runGame(q1)
-
-while True:
-    q1.put("right")
-    q1.put("down")
-    q1.put("left")
-    q1.put("down")
