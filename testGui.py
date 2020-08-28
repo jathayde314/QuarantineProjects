@@ -83,7 +83,8 @@ def updateBlocks(animatedBoard):
     for col in range(0,4):
         for row in range(0,4):
             if animatedBoard[col][row] != None:
-                animatedBoard[col][row].update()
+                if animatedBoard[col][row].hasMerged and animatedBoard[col][row].checkBlockLocation():
+                    animatedBoard[col][row].update()
 
 def paintBoard(animatedBoard, deletedTiles):
     for col in range(0,4):
@@ -111,7 +112,7 @@ def resetHasMerged(board):
             if board[col][row] != None:
                 board[col][row].hasMerged = False
 
-def deleteMergedTiles(deletedTiles):
+def deleteMergedTiles(board, deletedTiles):
     retval = [] #stores completed deletions
     for tile in deletedTiles:
         if tile.checkBlockLocation():
@@ -202,16 +203,9 @@ def upMove(board):
     moveBlockUp()
     return deletedTiles
 
-#Binds keys to actions. Queueing prevents animations from terminating previous animations while still running
-window.bind("<KeyRelease-Left>", lambda e: q.put("left"))
-window.bind("<KeyRelease-Right>", lambda e: q.put("right"))
-window.bind("<KeyRelease-Up>", lambda e: q.put("up"))
-window.bind("<KeyRelease-Down>", lambda e: q.put("down"))
-
-
 
 #Main animation loop
-def cycle(board, deletedTiles = []):
+def cycle(board, q, deletedTiles = []):
     if not checkIfBlocksMoving(board): #No blocks are moving, in between actions
         if not q.empty():
             move = q.get()
@@ -224,7 +218,7 @@ def cycle(board, deletedTiles = []):
             if not checkIfBlocksMoving(board, deletedTiles): #No blocks are moving after initial move
                 updateBlocks(board) #Changes number values
                 #Deletes merged tiles from animated board
-                deleteMergedTiles(deletedTiles)
+                deleteMergedTiles(board, deletedTiles)
                 mergeOccured = False
                 for col in range(0,4):
                     for row in range(0,4):
@@ -236,23 +230,28 @@ def cycle(board, deletedTiles = []):
 
     if checkIfBlocksMoving(board, deletedTiles): #In process of moving
         paintBoard(board, deletedTiles)
-        deleteMergedTiles(deletedTiles)
+        deleteMergedTiles(board, deletedTiles)
+        updateBlocks(board) #Changes number values
         if not checkIfBlocksMoving(board, deletedTiles): #Happens when final block moves into place
             updateBlocks(board) #Changes number values
             #Deletes merged tiles from animated board
-            deleteMergedTiles(deletedTiles)
+            deleteMergedTiles(board, deletedTiles)
             resetHasMerged(board)
             generateBlock(board) #Creates new block
     window.update()
     return (board, deletedTiles)
 
-#Defining some variables.
-board = [[None,None,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
-block0 = Block(0,0, board)
-block1 = Block(0,1, board)
-block2 = Block(0,3, board)
-q = Queue()
-deletedTiles = []
+#Binds keys to actions. Queueing prevents animations from terminating previous animations while still running
+def setKeyboardBindings(q):
+    window.bind("<KeyRelease-Left>", lambda e: q.put("left"))
+    window.bind("<KeyRelease-Right>", lambda e: q.put("right"))
+    window.bind("<KeyRelease-Up>", lambda e: q.put("up"))
+    window.bind("<KeyRelease-Down>", lambda e: q.put("down"))
 
-while True:
-    (board, deletedTiles) = cycle(board, deletedTiles)
+def runGame(q):
+    board = [[None,None,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
+    generateBlock(board)
+    generateBlock(board)
+    deletedTiles = []
+    while True:
+        (board, deletedTiles) = cycle(board, q, deletedTiles)
