@@ -3,8 +3,6 @@ import copy
 from queue import Queue
 import random
 
-#TODO: Make mergers/updating values occur when blocks reach final location rather than all at the end.
-
 
 #Defining some important variables
 blockWidth = 40
@@ -17,6 +15,7 @@ class Block:
         self.row = row
         self.col = col
         self.val = 1
+        self.hasMerged = False
         board[col][row] = self
 
         self.rect = canvas.create_rectangle((col+1) * blockMargin + col * blockWidth,(row+1) * blockMargin + row * blockWidth, (col + 1) * (blockMargin + blockWidth), (row + 1) * (blockMargin + blockWidth),fill = "black")
@@ -66,7 +65,7 @@ def moveBlockUp():
     x = 0
     y = -moveSpeed
 
-def checkIfBlocksMoving(animatedBoard, deletedTiles):
+def checkIfBlocksMoving(animatedBoard, deletedTiles = []):
     retval = False
     for col in range(0,4):
         for row in range(0,4):
@@ -87,13 +86,11 @@ def updateBlocks(animatedBoard):
                 animatedBoard[col][row].update()
 
 def paintBoard(animatedBoard, deletedTiles):
-    print("paint board running")
     for col in range(0,4):
         for row in range(0,4):
             if animatedBoard[col][row] != None:
                 if not animatedBoard[col][row].checkBlockLocation():
                     moveBlock(animatedBoard[col][row])
-                    print("block moved")
     for tile in deletedTiles:
         if not tile.checkBlockLocation():
             moveBlock(tile)
@@ -107,25 +104,26 @@ def generateBlock(board):
                 openTiles.append((col,row))
     position = random.choice(openTiles)
     Block(position[0], position[1], board)
-    print("block generated")
 
-def resetHasMerged():
+def resetHasMerged(board):
     for col in range(0,4):
         for row in range(0,4):
-            hasMerged[col][row] = 0
+            if board[col][row] != None:
+                board[col][row].hasMerged = False
 
 def deleteMergedTiles(deletedTiles):
+    retval = [] #stores completed deletions
     for tile in deletedTiles:
         if tile.checkBlockLocation():
             canvas.delete(tile.rect)
             canvas.delete(tile.text)
             if board[tile.col][tile.row] == tile:
                 board[tile.col][tile.row] = None
-            deletedTiles.remove(tile)
-    return deletedTiles
+            retval.append(tile)
+    for tile in retval:
+        deletedTiles.remove(tile)
 
 def rightMove(board):
-    print("right move")
     deletedTiles = []
     for col in [2,1,2,0,1,2]:
         for row in range(0,4): #Order moves right most, then works its way left.
@@ -135,8 +133,8 @@ def rightMove(board):
                     board[col+1][row].col = board[col+1][row].col + 1
                     board[col][row] = None
                 elif board[col+1][row] != None:
-                    if board[col+1][row].val == board[col][row].val and hasMerged[col+1][row] == 0 and hasMerged[col][row] == 0:
-                        hasMerged[col+1][row] = 1
+                    if board[col+1][row].val == board[col][row].val and not board[col+1][row].hasMerged and not board[col][row].hasMerged:
+                        board[col+1][row].hasMerged = True
                         board[col+1][row].val = board[col][row].val + 1
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
@@ -154,8 +152,8 @@ def downMove(board):
                     board[col][row+1].row = board[col][row+1].row + 1
                     board[col][row] = None
                 elif board[col][row+1] != None:
-                    if board[col][row+1].val == board[col][row].val and hasMerged[col][row+1] == 0 and hasMerged[col][row] == 0:
-                        hasMerged[col][row+1] = 1
+                    if board[col][row+1].val == board[col][row].val and not board[col][row+1].hasMerged and not board[col][row].hasMerged:
+                        board[col][row+1].hasMerged = True
                         board[col][row+1].val = board[col][row].val + 1
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
@@ -176,8 +174,8 @@ def leftMove(board):
                     board[col-1][row].col = board[col-1][row].col - 1
                     board[col][row] = None
                 elif board[col-1][row] != None:
-                    if board[col-1][row].val == board[col][row].val and hasMerged[col-1][row] == 0 and hasMerged[col][row] == 0:
-                        hasMerged[col-1][row] = 1
+                    if board[col-1][row].val == board[col][row].val and not board[col-1][row].hasMerged and not board[col][row].hasMerged:
+                        board[col-1][row].hasMerged = True
                         board[col-1][row].val = board[col][row].val + 1
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
@@ -195,8 +193,8 @@ def upMove(board):
                     board[col][row-1].row = board[col][row-1].row - 1
                     board[col][row] = None
                 elif board[col][row-1] != None:
-                    if board[col][row-1].val == board[col][row].val and hasMerged[col][row-1] == 0 and hasMerged[col][row] == 0:
-                        hasMerged[col][row-1] = 1
+                    if board[col][row-1].val == board[col][row].val and not board[col][row-1].hasMerged and not board[col][row].hasMerged:
+                        board[col][row-1].hasMerged = True
                         board[col][row-1].val = board[col][row].val + 1
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
@@ -211,18 +209,10 @@ window.bind("<KeyRelease-Up>", lambda e: q.put("up"))
 window.bind("<KeyRelease-Down>", lambda e: q.put("down"))
 
 
-board = [[None,None,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
-block0 = Block(0,0, board)
-block1 = Block(0,1, board)
-#block2 = Block(0,3, board)
-hasMerged = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
-q = Queue()
 
-#Defining deleted tiles in non local environment
-deletedTiles = []
-
-while True:
-    if not checkIfBlocksMoving(board, []): #No blocks are moving, in between actions
+#Main animation loop
+def cycle(board, deletedTiles = []):
+    if not checkIfBlocksMoving(board): #No blocks are moving, in between actions
         if not q.empty():
             move = q.get()
             if move == "left": deletedTiles = leftMove(board)
@@ -231,7 +221,6 @@ while True:
             elif move == "down": deletedTiles = downMove(board)
 
             paintBoard(board, deletedTiles)
-            print("paint board run")
             if not checkIfBlocksMoving(board, deletedTiles): #No blocks are moving after initial move
                 updateBlocks(board) #Changes number values
                 #Deletes merged tiles from animated board
@@ -239,20 +228,31 @@ while True:
                 mergeOccured = False
                 for col in range(0,4):
                     for row in range(0,4):
-                        if hasMerged[col][row] == 1:
-                            mergeOccured = True
+                        if board[col][row] != None:
+                            if board[col][row].hasMerged:
+                                mergeOccured = True
                 if mergeOccured: generateBlock(board) #Creates new block
-                resetHasMerged()
+                resetHasMerged(board)
 
     if checkIfBlocksMoving(board, deletedTiles): #In process of moving
         paintBoard(board, deletedTiles)
-        deletedTiles = deleteMergedTiles(deletedTiles)
+        deleteMergedTiles(deletedTiles)
         if not checkIfBlocksMoving(board, deletedTiles): #Happens when final block moves into place
             updateBlocks(board) #Changes number values
             #Deletes merged tiles from animated board
             deleteMergedTiles(deletedTiles)
-            print(hasMerged)
-            resetHasMerged()
+            resetHasMerged(board)
             generateBlock(board) #Creates new block
-            print(board)
     window.update()
+    return (board, deletedTiles)
+
+#Defining some variables.
+board = [[None,None,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
+block0 = Block(0,0, board)
+block1 = Block(0,1, board)
+block2 = Block(0,3, board)
+q = Queue()
+deletedTiles = []
+
+while True:
+    (board, deletedTiles) = cycle(board, deletedTiles)
