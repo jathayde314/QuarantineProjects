@@ -2,6 +2,7 @@ import tkinter as tk
 import copy
 import random
 import time
+import queue
 
 #Defining some important variables
 blockWidth = 40
@@ -107,8 +108,9 @@ def generateBlock(board):
     position = random.choice(openTiles)
     if boardNotEmpty:
         window.update() #prevents moving blocks from lagging
-        time.sleep(0.25)
+        time.sleep(0.5)
     Block(position[0], position[1], board)
+    print("block")
 
 def resetHasMerged(board):
     for col in range(0,4):
@@ -210,30 +212,24 @@ def upMove(board):
 
 #Main animation loop
 def cycle(board, q, deletedTiles = []):
-    if not checkIfBlocksMoving(board): #No blocks are moving, in between actions
-        if not q.empty():
-            move = q.get()
-            if move == "left": deletedTiles = leftMove(board)
-            elif move == "right": deletedTiles = rightMove(board)
-            elif move == "up": deletedTiles = upMove(board)
-            elif move == "down": deletedTiles = downMove(board)
-
-            paintBoard(board, deletedTiles)
-            if not checkIfBlocksMoving(board, deletedTiles): #No blocks are moving after initial move
-                updateBlocks(board) #Changes number values
-                #Deletes merged tiles from animated board
-                deleteMergedTiles(board, deletedTiles)
-                mergeOccured = False
-                for col in range(0,4):
-                    for row in range(0,4):
-                        if board[col][row] != None:
-                            if board[col][row].hasMerged:
-                                mergeOccured = True
-                if mergeOccured:
-                    generateBlock(board) #Creates new block
-                    resetHasMerged(board)
-
-    if checkIfBlocksMoving(board, deletedTiles): #In process of moving
+    if not checkIfBlocksMoving(board, deletedTiles): #No blocks are moving, in between actions
+        paintBoard(board, deletedTiles)
+        if not checkIfBlocksMoving(board, deletedTiles): #No blocks are moving after initial move
+            updateBlocks(board) #Changes number values
+            #Deletes merged tiles from animated board
+            deleteMergedTiles(board, deletedTiles)
+            mergeOccured = False
+            for col in range(0,4):
+                for row in range(0,4):
+                    if board[col][row] != None:
+                        if board[col][row].hasMerged:
+                            mergeOccured = True
+            if mergeOccured:
+                generateBlock(board) #Creates new block
+                resetHasMerged(board)
+            window.update()
+            return board
+    elif checkIfBlocksMoving(board, deletedTiles): #In process of moving
         paintBoard(board, deletedTiles)
         deleteMergedTiles(board, deletedTiles)
         updateBlocks(board) #Changes number values
@@ -243,8 +239,11 @@ def cycle(board, q, deletedTiles = []):
             deleteMergedTiles(board, deletedTiles)
             resetHasMerged(board)
             generateBlock(board) #Creates new block
+            window.update()
+            return board
     window.update()
-    return (board, deletedTiles)
+    cycle(board, q, deletedTiles)
+    return board
 
 #Binds keys to actions. Queueing prevents animations from terminating previous animations while still running
 def setKeyboardBindings(q):
@@ -258,6 +257,17 @@ def runGame(q):
     generateBlock(board)
     generateBlock(board)
     deletedTiles = []
-    setKeyboardBindings(q)
     while True:
-        (board, deletedTiles) = cycle(board, q, deletedTiles)
+        if not checkIfBlocksMoving(board):
+            if not q.empty():
+                move = q.get()
+                if move == "left": deletedTiles = leftMove(board)
+                elif move == "right": deletedTiles = rightMove(board)
+                elif move == "up": deletedTiles = upMove(board)
+                elif move == "down": deletedTiles = downMove(board)
+        board = cycle(board, q, deletedTiles)
+
+if __name__ == "__main__":
+    q = queue.Queue()
+    setKeyboardBindings(q)
+    runGame(q)

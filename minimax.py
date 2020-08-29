@@ -6,13 +6,17 @@ import time
 q = multiprocessing.Queue()
 
 def test(q):
-    for i in range(0,5):
-        q.put("right")
+    while True:
+        #q.put("right")
+        #q.put("down")
+        #q.put("left")
+        #q.put("down")
+        time.sleep(2)
 
-print(multiprocessing.get_start_method())
 if __name__ == "__main__":
     #Necessary to run on macs
     multiprocessing.set_start_method('spawn', force=True)
+
     q = multiprocessing.Queue()
     p1 = multiprocessing.Process(target=runGame, args=(q,))
     p2 = multiprocessing.Process(target=test, args=(q,))
