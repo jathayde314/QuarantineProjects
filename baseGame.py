@@ -14,12 +14,12 @@ class Block:
     def __init__(self, col, row, board):
         self.row = row
         self.col = col
-        self.val = 1
+        self.val = 2
         self.hasMerged = False
         board[col][row] = self
 
         self.rect = canvas.create_rectangle((col+1) * blockMargin + col * blockWidth,(row+1) * blockMargin + row * blockWidth, (col + 1) * (blockMargin + blockWidth), (row + 1) * (blockMargin + blockWidth),fill = "black")
-        self.text = canvas.create_text(30 + col * (blockWidth + blockMargin),30 + row * (blockWidth + blockMargin),fill="white",font="Times 15", text= 2**self.val)
+        self.text = canvas.create_text(30 + col * (blockWidth + blockMargin),30 + row * (blockWidth + blockMargin),fill="white",font="Times 15", text= self.val)
 
     def checkBlockLocation(self):
         if canvas.coords(self.rect) == [(self.col+1) * blockMargin + self.col * blockWidth,(self.row+1) * blockMargin + self.row * blockWidth, (self.col + 1) * (blockMargin + blockWidth), (self.row + 1) * (blockMargin + blockWidth)]:
@@ -28,7 +28,7 @@ class Block:
 
     def update(self):
         canvas.delete(self.text)
-        self.text = canvas.create_text(30 + self.col * (blockWidth + blockMargin),30 + self.row * (blockWidth + blockMargin),fill="white",font="Times 15", text= 2**self.val)
+        self.text = canvas.create_text(30 + self.col * (blockWidth + blockMargin),30 + self.row * (blockWidth + blockMargin),fill="white",font="Times 15", text= self.val)
 
 
 
@@ -142,7 +142,7 @@ def rightMove(board):
                 elif board[col+1][row] != None:
                     if board[col+1][row].val == board[col][row].val and not board[col+1][row].hasMerged and not board[col][row].hasMerged:
                         board[col+1][row].hasMerged = True
-                        board[col+1][row].val = board[col][row].val + 1
+                        board[col+1][row].val = 2 * board[col][row].val
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
 
@@ -161,7 +161,7 @@ def downMove(board):
                 elif board[col][row+1] != None:
                     if board[col][row+1].val == board[col][row].val and not board[col][row+1].hasMerged and not board[col][row].hasMerged:
                         board[col][row+1].hasMerged = True
-                        board[col][row+1].val = board[col][row].val + 1
+                        board[col][row+1].val = 2 *board[col][row].val
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
     #for tile in deletedTiles:
@@ -183,7 +183,7 @@ def leftMove(board):
                 elif board[col-1][row] != None:
                     if board[col-1][row].val == board[col][row].val and not board[col-1][row].hasMerged and not board[col][row].hasMerged:
                         board[col-1][row].hasMerged = True
-                        board[col-1][row].val = board[col][row].val + 1
+                        board[col-1][row].val = 2 * board[col][row].val
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
 
@@ -202,12 +202,19 @@ def upMove(board):
                 elif board[col][row-1] != None:
                     if board[col][row-1].val == board[col][row].val and not board[col][row-1].hasMerged and not board[col][row].hasMerged:
                         board[col][row-1].hasMerged = True
-                        board[col][row-1].val = board[col][row].val + 1
+                        board[col][row-1].val = 2 * board[col][row].val
                         deletedTiles.append(board[col][row])
                         board[col][row] = None
 
     moveBlockUp()
     return deletedTiles
+
+def getScore(board):
+    score = 0
+    for col in range(0,4):
+        for row in range(0,4):
+            if board[col][row] != None:
+                score += board[col][row].val * 2**(col + row)
 
 
 #Main animation loop
@@ -261,7 +268,9 @@ def runGame(q):
         if not checkIfBlocksMoving(board):
             if not q.empty():
                 move = q.get()
-                if move == "left": deletedTiles = leftMove(board)
+                if move == "left":
+                    newBoard = copy.deepcopy(board)
+                    deletedTiles = leftMove(newBoard)
                 elif move == "right": deletedTiles = rightMove(board)
                 elif move == "up": deletedTiles = upMove(board)
                 elif move == "down": deletedTiles = downMove(board)
