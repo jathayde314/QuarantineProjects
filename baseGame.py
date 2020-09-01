@@ -18,8 +18,9 @@ class Block:
         self.hasMerged = False
         board[col][row] = self
 
-        self.rect = canvas.create_rectangle((col+1) * blockMargin + col * blockWidth,(row+1) * blockMargin + row * blockWidth, (col + 1) * (blockMargin + blockWidth), (row + 1) * (blockMargin + blockWidth),fill = "black")
-        self.text = canvas.create_text(30 + col * (blockWidth + blockMargin),30 + row * (blockWidth + blockMargin),fill="white",font="Times 15", text= self.val)
+    def drawBlock(self):
+        self.rect = canvas.create_rectangle((self.col+1) * blockMargin + self.col * blockWidth,(self.row+1) * blockMargin + self.row * blockWidth, (self.col + 1) * (blockMargin + blockWidth), (self.row + 1) * (blockMargin + blockWidth),fill = "black")
+        self.text = canvas.create_text(30 + self.col * (blockWidth + blockMargin),30 + self.row * (blockWidth + blockMargin),fill="white",font="Times 15", text= self.val)
 
     def checkBlockLocation(self):
         if canvas.coords(self.rect) == [(self.col+1) * blockMargin + self.col * blockWidth,(self.row+1) * blockMargin + self.row * blockWidth, (self.col + 1) * (blockMargin + blockWidth), (self.row + 1) * (blockMargin + blockWidth)]:
@@ -109,8 +110,8 @@ def generateBlock(board):
     if boardNotEmpty:
         window.update() #prevents moving blocks from lagging
         time.sleep(0.5)
-    Block(position[0], position[1], board)
-    print("block")
+    block = Block(position[0], position[1], board)
+    block.drawBlock()
 
 def resetHasMerged(board):
     for col in range(0,4):
@@ -129,6 +130,14 @@ def deleteMergedTiles(board, deletedTiles):
             retval.append(tile)
     for tile in retval:
         deletedTiles.remove(tile)
+
+def getOpenTiles(board):
+    retval = []
+    for col in range(0,4):
+        for row in range(0,4):
+            if board[col][row] == None:
+                retval.append((col,row))
+    return retval
 
 def rightMove(board):
     deletedTiles = []
@@ -216,6 +225,30 @@ def getScore(board):
             if board[col][row] != None:
                 score += board[col][row].val * 2**(col + row)
 
+def futureMovesDict(prevBoards, finalDepth, depth):
+    retval = {}
+    if depth % 2 == 0: #even
+        for move, board in prevBoards.items():
+            for move in ['r','d','u','l']:
+                newBoard = copy.deepcopy(board)
+                if move == 'r':
+                    rightMove(newBoard)
+                if move == 'd':
+                    downMove(newBoard)
+                if move == 'u':
+                    upMove(newBoard)
+                if move == 'l':
+                    leftMove(newBoard)
+                retval[move] = newBoard
+    elif depth % 2 == 1: #odd
+        for move, board in prevBoards.items():
+            for tile in getOpenTiles(board):
+                newBoard = copy.deepcopy(board)
+                Block(tile[0], tile[1], newBoard)
+                retval[move + str(tile[0]) + str(tile[1])] = newBoard
+    #Runs recursively
+    if depth == finalDepth: return retval
+    else: return futureMovesDict(retval, finalDepth, depth + 1)
 
 #Main animation loop
 def cycle(board, q, deletedTiles = []):
@@ -269,11 +302,15 @@ def runGame(q):
             if not q.empty():
                 move = q.get()
                 if move == "left":
-                    newBoard = copy.deepcopy(board)
-                    deletedTiles = leftMove(newBoard)
+                    deletedTiles = leftMove(board)
+                    retval = futureMovesDict({"": board}, 1, 0)
+                    print(retval)
                 elif move == "right": deletedTiles = rightMove(board)
                 elif move == "up": deletedTiles = upMove(board)
                 elif move == "down": deletedTiles = downMove(board)
+                elif type(move) == type(0): #True if int
+                    retval = futureMovesDict({"", board}, move, 0)
+                elif move == "END": break
         board = cycle(board, q, deletedTiles)
 
 if __name__ == "__main__":

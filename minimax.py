@@ -1,4 +1,4 @@
-from testGui import runGame
+from baseGame import runGame
 import multiprocessing
 import tkinter
 import time
@@ -7,11 +7,14 @@ q = multiprocessing.Queue()
 
 def test(q):
     while True:
-        #q.put("right")
-        #q.put("down")
-        #q.put("left")
-        #q.put("down")
+        q.put("right")
+        q.put("down")
+        q.put("left")
+        q.put("down")
         time.sleep(2)
+
+def getFutureGamestates(depth):
+    q.put(depth)
 
 if __name__ == "__main__":
     #Necessary to run on macs
