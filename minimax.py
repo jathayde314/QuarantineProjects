@@ -7,11 +7,12 @@ q = multiprocessing.Queue()
 
 def test(q):
     while True:
-        q.put("right")
-        q.put("down")
-        q.put("left")
-        q.put("down")
+        q.put(1)
         time.sleep(2)
+        while q.empty(): pass
+        dict = q.get()
+        print(dict)
+
 
 def getFutureGamestates(depth):
     q.put(depth)

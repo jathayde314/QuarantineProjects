@@ -301,15 +301,13 @@ def runGame(q):
         if not checkIfBlocksMoving(board):
             if not q.empty():
                 move = q.get()
-                if move == "left":
-                    deletedTiles = leftMove(board)
-                    retval = futureMovesDict({"": board}, 1, 0)
-                    print(retval)
+                if move == "left":deletedTiles = leftMove(board)
                 elif move == "right": deletedTiles = rightMove(board)
                 elif move == "up": deletedTiles = upMove(board)
                 elif move == "down": deletedTiles = downMove(board)
                 elif type(move) == type(0): #True if int
                     retval = futureMovesDict({"", board}, move, 0)
+                    q.put({k: f(v) for k, v in retval.items()})
                 elif move == "END": break
         board = cycle(board, q, deletedTiles)
 
