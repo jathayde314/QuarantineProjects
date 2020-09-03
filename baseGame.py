@@ -224,6 +224,7 @@ def getScore(board):
         for row in range(0,4):
             if board[col][row] != None:
                 score += board[col][row].val * 2**(col + row)
+    return score
 
 def futureMovesDict(prevBoards, finalDepth, depth):
     retval = {}
@@ -251,7 +252,7 @@ def futureMovesDict(prevBoards, finalDepth, depth):
     else: return futureMovesDict(retval, finalDepth, depth + 1)
 
 #Main animation loop
-def cycle(board, q, deletedTiles = []):
+def cycle(board, deletedTiles = []):
     if not checkIfBlocksMoving(board, deletedTiles): #No blocks are moving, in between actions
         paintBoard(board, deletedTiles)
         if not checkIfBlocksMoving(board, deletedTiles): #No blocks are moving after initial move
@@ -282,7 +283,7 @@ def cycle(board, q, deletedTiles = []):
             window.update()
             return board
     window.update()
-    cycle(board, q, deletedTiles)
+    cycle(board, deletedTiles)
     return board
 
 #Binds keys to actions. Queueing prevents animations from terminating previous animations while still running
@@ -292,7 +293,7 @@ def setKeyboardBindings(q):
     window.bind("<KeyRelease-Up>", lambda e: q.put("up"))
     window.bind("<KeyRelease-Down>", lambda e: q.put("down"))
 
-def runGame(q):
+def runGame(q,q2 = None):
     board = [[None,None,None,None],[None,None,None,None],[None,None,None,None],[None,None,None,None]]
     generateBlock(board)
     generateBlock(board)
@@ -306,10 +307,10 @@ def runGame(q):
                 elif move == "up": deletedTiles = upMove(board)
                 elif move == "down": deletedTiles = downMove(board)
                 elif type(move) == type(0): #True if int
-                    retval = futureMovesDict({"", board}, move, 0)
-                    q.put({k: f(v) for k, v in retval.items()})
+                    retval = futureMovesDict({"": board}, move, 0)
+                    q2.put({key: getScore(board) for key, board in retval.items()})
                 elif move == "END": break
-        board = cycle(board, q, deletedTiles)
+        board = cycle(board, deletedTiles)
 
 if __name__ == "__main__":
     q = queue.Queue()

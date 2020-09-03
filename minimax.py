@@ -3,14 +3,12 @@ import multiprocessing
 import tkinter
 import time
 
-q = multiprocessing.Queue()
 
-def test(q):
+def test(q,q2):
     while True:
         q.put(1)
-        time.sleep(2)
-        while q.empty(): pass
-        dict = q.get()
+        while q2.empty(): pass
+        dict = q2.get(timeout = 1)
         print(dict)
 
 
@@ -22,8 +20,9 @@ if __name__ == "__main__":
     multiprocessing.set_start_method('spawn', force=True)
 
     q = multiprocessing.Queue()
-    p1 = multiprocessing.Process(target=runGame, args=(q,))
-    p2 = multiprocessing.Process(target=test, args=(q,))
+    q2 = multiprocessing.Queue()
+    p1 = multiprocessing.Process(target=runGame, args=(q,q2))
+    p2 = multiprocessing.Process(target=test, args=(q,q2))
     p1.start()
     p2.start()
     p1.join()
