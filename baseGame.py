@@ -17,12 +17,12 @@ class BoardTree:
 
     def futureMoves(self, finalDepth, depth):
         if depth % 2 == 0: #even
-            for m in ['r','d','u','l']:
+            for m in ['right','down','up','left']:
                 newBoard = copy.deepcopy(self.board)
-                if m == 'r': rightMove(newBoard)
-                if m == 'd': downMove(newBoard)
-                if m == 'u': upMove(newBoard)
-                if m == 'l': leftMove(newBoard)
+                if m == 'right': rightMove(newBoard)
+                if m == 'down': downMove(newBoard)
+                if m == 'up': upMove(newBoard)
+                if m == 'left': leftMove(newBoard)
                 new = BoardTree(newBoard, move = m)
                 self.children.append(new)
         elif depth % 2 == 1: #odd
