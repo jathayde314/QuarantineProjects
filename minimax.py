@@ -6,13 +6,12 @@ import time
 
 def test(q,q2):
     q.put("right")
-    for i in range(10000): # remove later
+    while True: # remove later
         test = q2.get()
         test.futureMoves(1,0)
         maxNode = test.children[0]
         for node in test.children:
             if node.getScore() > maxNode.getScore(): maxNode = node
-            print(node.move, node.getScore())
         q.put(maxNode.move)
 
 

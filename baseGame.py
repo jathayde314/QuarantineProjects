@@ -299,7 +299,7 @@ def runGame(q,q2 = None):
     generateBlock(board)
     generateBlock(board)
     deletedTiles = []
-    for i in range(10000): # remove later
+    while True: # remove later
         if not checkIfBlocksMoving(board):
             if not q.empty():
                 move = q.get()
@@ -310,7 +310,6 @@ def runGame(q,q2 = None):
                 if __name__ != "__main__":
                     new = BoardTree(copy.deepcopy(board))
                     q2.put(new)
-                    print("q2 used")
         board = cycle(board, deletedTiles)
 
 
