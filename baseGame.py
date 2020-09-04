@@ -9,6 +9,11 @@ blockWidth = 40
 blockMargin = 10
 window = tk.Tk()
 
+class BoardTree:
+    def __init__(self, board, children = None, move = None):
+        self.board = board
+        self.children = children
+        self.move = None
 
 class Block:
     def __init__(self, col, row, board):
