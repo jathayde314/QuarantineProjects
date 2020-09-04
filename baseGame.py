@@ -10,10 +10,30 @@ blockMargin = 10
 window = tk.Tk()
 
 class BoardTree:
-    def __init__(self, board, children = None, move = None):
+    def __init__(self, board, children = [], move = None):
         self.board = board
         self.children = children
-        self.move = None
+        self.move = move
+
+    def futureMoves(self, finalDepth, depth):
+        if depth % 2 == 0: #even
+            for m in ['r','d','u','l']:
+                newBoard = copy.deepcopy(self.board)
+                if m == 'r': rightMove(newBoard)
+                if m == 'd': downMove(newBoard)
+                if m == 'u': upMove(newBoard)
+                if m == 'l': leftMove(newBoard)
+                new = BoardTree(newBoard, move = m)
+                self.children.append(new)
+        elif depth % 2 == 1: #odd
+            for tile in getOpenTiles(self.board):
+                newBoard = copy.deepcopy(self.board)
+                Block(tile[0], tile[1], newBoard)
+                new = BoardTree(newBoard)
+                self.children.append(new)
+        if depth + 1 == finalDepth: return
+        for node in self.children: node.futureMoves(finalDepth, depth+1)
+
 
 class Block:
     def __init__(self, col, row, board):
@@ -231,31 +251,6 @@ def getScore(board):
                 score += board[col][row].val * 2**(col + row)
     return score
 
-def futureMovesDict(prevBoards, finalDepth, depth):
-    if depth % 2 == 0: #even
-        for node in prevBoards:
-            retval = []
-            for move in ['r','d','u','l']:
-                newBoard = copy.deepcopy(node.board)
-                if move == 'r': rightMove(newBoard)
-                if move == 'd': downMove(newBoard)
-                if move == 'u': upMove(newBoard)
-                if move == 'l': leftMove(newBoard)
-                new = BoardTree(newBoard)
-                retval.append(new)
-            node.children = retval
-    elif depth % 2 == 1: #odd
-        for node in prevBoards:
-            retval = []
-            for tile in getOpenTiles(node.board):
-                newBoard = copy.deepcopy(node.board)
-                Block(tile[0], tile[1], newBoard)
-                new = BoardTree(newBoard)
-                retval.append(new)
-            node.children = retval
-    if depth == finalDepth: return
-    else: return futureMovesDict(retval, finalDepth, depth + 1)
-
 #Main animation loop
 def cycle(board, deletedTiles = []):
     if not checkIfBlocksMoving(board, deletedTiles): #No blocks are moving, in between actions
@@ -303,7 +298,7 @@ def runGame(q,q2 = None):
     generateBlock(board)
     generateBlock(board)
     deletedTiles = []
-    while True:
+    for i in range(10000): # remove later
         if not checkIfBlocksMoving(board):
             if not q.empty():
                 move = q.get()
@@ -311,11 +306,12 @@ def runGame(q,q2 = None):
                 elif move == "right": deletedTiles = rightMove(board)
                 elif move == "up": deletedTiles = upMove(board)
                 elif move == "down": deletedTiles = downMove(board)
-                elif type(move) == type(0): #True if int
-                    retval = futureMovesDict({"": board}, move, 0)
-                    q2.put({key: getScore(board) for key, board in retval.items()})
-                elif move == "END": break
+                if __name__ != "__main__":
+                    new = BoardTree(copy.deepcopy(board))
+                    q2.put(new)
+                    print("q2 used")
         board = cycle(board, deletedTiles)
+
 
 if __name__ == "__main__":
     q = queue.Queue()

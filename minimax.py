@@ -1,15 +1,15 @@
-from baseGame import runGame
+from baseGame import runGame, BoardTree
 import multiprocessing
 import tkinter
 import time
 
 
 def test(q,q2):
-    while True:
-        q.put(1)
-        while q2.empty(): pass
-        dict = q2.get(timeout = 1)
-        print(dict)
+    for i in range(10000): # remove later
+        q.put("right")
+        test = q2.get()
+        test.futureMoves(1,0)
+        print(test.children)
 
 
 def getFutureGamestates(depth):
