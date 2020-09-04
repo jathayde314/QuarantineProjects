@@ -232,28 +232,28 @@ def getScore(board):
     return score
 
 def futureMovesDict(prevBoards, finalDepth, depth):
-    retval = {}
     if depth % 2 == 0: #even
-        for move, board in prevBoards.items():
+        for node in prevBoards:
+            retval = []
             for move in ['r','d','u','l']:
-                newBoard = copy.deepcopy(board)
-                if move == 'r':
-                    rightMove(newBoard)
-                if move == 'd':
-                    downMove(newBoard)
-                if move == 'u':
-                    upMove(newBoard)
-                if move == 'l':
-                    leftMove(newBoard)
-                retval[move] = newBoard
+                newBoard = copy.deepcopy(node.board)
+                if move == 'r': rightMove(newBoard)
+                if move == 'd': downMove(newBoard)
+                if move == 'u': upMove(newBoard)
+                if move == 'l': leftMove(newBoard)
+                new = BoardTree(newBoard)
+                retval.append(new)
+            node.children = retval
     elif depth % 2 == 1: #odd
-        for move, board in prevBoards.items():
-            for tile in getOpenTiles(board):
-                newBoard = copy.deepcopy(board)
+        for node in prevBoards:
+            retval = []
+            for tile in getOpenTiles(node.board):
+                newBoard = copy.deepcopy(node.board)
                 Block(tile[0], tile[1], newBoard)
-                retval[move + str(tile[0]) + str(tile[1])] = newBoard
-    #Runs recursively
-    if depth == finalDepth: return retval
+                new = BoardTree(newBoard)
+                retval.append(new)
+            node.children = retval
+    if depth == finalDepth: return
     else: return futureMovesDict(retval, finalDepth, depth + 1)
 
 #Main animation loop
