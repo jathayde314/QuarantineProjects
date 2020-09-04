@@ -34,6 +34,15 @@ class BoardTree:
         if depth + 1 == finalDepth: return
         for node in self.children: node.futureMoves(finalDepth, depth+1)
 
+    def checkScore(self):
+        score = 0
+        for col in range(0,4):
+            for row in range(0,4):
+                if self.board[col][row] != None:
+                    score += self.board[col][row].val * 2**(col + row)
+        return score
+
+
 
 class Block:
     def __init__(self, col, row, board):
@@ -242,14 +251,6 @@ def upMove(board):
 
     moveBlockUp()
     return deletedTiles
-
-def getScore(board):
-    score = 0
-    for col in range(0,4):
-        for row in range(0,4):
-            if board[col][row] != None:
-                score += board[col][row].val * 2**(col + row)
-    return score
 
 #Main animation loop
 def cycle(board, deletedTiles = []):
