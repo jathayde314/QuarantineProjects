@@ -1,15 +1,19 @@
-from baseGame import runGame
+from baseGame import runGame, BoardTree
 import multiprocessing
 import tkinter
 import time
 
 
 def test(q,q2):
-    while True:
-        q.put(1)
-        while q2.empty(): pass
-        dict = q2.get(timeout = 1)
-        print(dict)
+    q.put("right")
+    for i in range(10000): # remove later
+        test = q2.get()
+        test.futureMoves(1,0)
+        maxNode = test.children[0]
+        for node in test.children:
+            if node.getScore() > maxNode.getScore(): maxNode = node
+            print(node.move, node.getScore())
+        q.put(maxNode.move)
 
 
 def getFutureGamestates(depth):
