@@ -10,6 +10,7 @@ def test(q,q2):
         test = q2.get()
         test.futureMoves(1,0)
         print(test.children)
+        print(test.getScore())
 
 
 def getFutureGamestates(depth):

@@ -34,7 +34,7 @@ class BoardTree:
         if depth + 1 == finalDepth: return
         for node in self.children: node.futureMoves(finalDepth, depth+1)
 
-    def checkScore(self):
+    def getScore(self):
         score = 0
         for col in range(0,4):
             for row in range(0,4):
