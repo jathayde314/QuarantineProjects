@@ -4,15 +4,29 @@ import tkinter
 import time
 
 
-def test(q,q2):
+def findMove(q,q2):
     q.put("right")
     while True: # remove later
         test = q2.get()
-        test.futureMoves(1,0)
+        test.futureMoves(3,0)
         maxNode = test.children[0]
-        for node in test.children:
-            if node.getScore() > maxNode.getScore(): maxNode = node
+        max = maxScore(maxNode)
+        for node in test.children[1:]:
+            temp = maxScore(node)
+            if temp > max:
+                max = temp
+                maxNode = node
         q.put(maxNode.move)
+
+def maxScore(node):
+    if len(node.children) == 0:
+        return node.getScore()
+    max = 0
+    for sub in node.children:
+        temp = maxScore(sub)
+        if max < temp: max = temp
+    return max
+
 
 
 def getFutureGamestates(depth):
@@ -25,7 +39,7 @@ if __name__ == "__main__":
     q = multiprocessing.Queue()
     q2 = multiprocessing.Queue()
     p1 = multiprocessing.Process(target=runGame, args=(q,q2))
-    p2 = multiprocessing.Process(target=test, args=(q,q2))
+    p2 = multiprocessing.Process(target=findMove, args=(q,q2))
     p1.start()
     p2.start()
     p1.join()
