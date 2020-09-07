@@ -4,6 +4,10 @@
 
 This project entailed coding my own version of the popular 2048 game using the tkinter package. Functionality includes a human player, a minimax algorithm, and an expectimax algorithm.
 
+### A Message to Mac Users
+
+Due to macOS High Sierra and later changing the fork safety protocol, each process must be generated via the spawn method to avoid crashing. The method to do so either does not exist or is different in the default Python 2.7, so **the code must be run in Python 3.** For users of other operating systems, I am not sure if fork() in Python is still supported. For best practice, I recommend always running it in Python 3 using spawn().
+
 ### Files
 
 1. Run baseGame.py to play 2048.
