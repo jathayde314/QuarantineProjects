@@ -12,7 +12,7 @@ def findMove(q,q2):
         maxNode = test.children[0]
         max = maxScore(maxNode)
         for node in test.children[1:]:
-            temp = maxScore(node)
+            temp = expectimax(node)
             if temp > max:
                 max = temp
                 maxNode = node
@@ -26,6 +26,13 @@ def maxScore(node):
         temp = maxScore(sub)
         if max < temp: max = temp
     return max
+
+def expectimax(node):
+    if len(node.children) == 0: return node.getScore()
+    sum = 0
+    for sub in node.children:
+        sum += expectimax(sub)
+    return sum/len(node.children)
 
 
 
