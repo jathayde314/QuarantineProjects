@@ -8,9 +8,9 @@ def findMove(q,q2):
     q.put("right")
     while True: # remove later
         test = q2.get()
-        test.futureMoves(3,0)
+        test.futureMoves(5,0)
         maxNode = test.children[0]
-        max = maxScore(maxNode)
+        max = expectimax(maxNode)
         for node in test.children[1:]:
             temp = expectimax(node)
             if temp > max:

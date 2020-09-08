@@ -41,7 +41,7 @@ class BoardTree:
         for col in range(0,4):
             for row in range(0,4):
                 if self.board[col][row] != None:
-                    score += self.board[col][row].val * 2**(col + row)
+                    score += (self.board[col][row].val-4) * 2**(col + row)
         return score
 
 
@@ -73,7 +73,7 @@ class Block:
 canvas = tk.Canvas(window)
 x = 0
 y = 0
-moveSpeed = 5 #must be divisor of block margin + block width
+moveSpeed = 10 #must be divisor of block margin + block width
 canvas.pack()
 
 
@@ -145,7 +145,7 @@ def generateBlock(board):
     position = random.choice(openTiles)
     if boardNotEmpty:
         window.update() #prevents moving blocks from lagging
-        time.sleep(0.5)
+        time.sleep(0.25)
     block = Block(position[0], position[1], board)
     block.drawBlock()
 
