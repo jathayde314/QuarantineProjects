@@ -40,8 +40,11 @@ class BoardTree:
         score = 0
         for col in range(0,4):
             for row in range(0,4):
+                emptyTiles = 0
                 if self.board[col][row] != None:
-                    score += (self.board[col][row].val-4) * 2**(col + row)
+                    score += (self.board[col][row].val) * 2**(col + 2 * row)
+                else: emptyTiles += 1
+                score += 8**emptyTiles
         return score
 
 
